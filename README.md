@@ -1,6 +1,6 @@
 # nestjs-json-rpc
 
-A JSONRPC implementation for NestJS
+A JSONRPC microservice strategy implementation for NestJS
 
 ## Install
 
@@ -33,7 +33,7 @@ export class TestService {
 }
 ```
 
-All the methods of the service will automatically be added with the name "<namespace>.<method>"
+All the methods of the service will automatically be added with the name `<namespace>.<method>`
 
 Use any standard microservice decorators:
 
