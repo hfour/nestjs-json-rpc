@@ -1,4 +1,3 @@
-
 import {
   UsePipes,
   PipeTransform,
@@ -11,20 +10,24 @@ import {
   UseInterceptors,
   UseGuards,
   Scope,
-} from '@nestjs/common';
+  Controller
+} from "@nestjs/common";
+
+import { JSONRpcService } from ".";
+import { MessagePattern } from "@nestjs/microservices";
 
 const initialModuleState = {
   pipeCalled: false,
   guardCaled: false,
   interceptorCalled: false,
   serviceConstructorCount: 0,
-  interceptorConstructorCount: 0,
+  interceptorConstructorCount: 0
 };
 
 export let DecorationsState = Object.assign({}, initialModuleState);
 
 export function resetDecorationsState() {
-  console.log('Reset count');
+  console.log("Reset count");
   Object.assign(DecorationsState, initialModuleState);
 }
 
@@ -43,8 +46,8 @@ class TestInterceptor implements NestInterceptor {
   }
   intercept(
     context: ExecutionContext,
-    next: CallHandler<any>,
-  ): import('rxjs').Observable<any> | Promise<import('rxjs').Observable<any>> {
+    next: CallHandler<any>
+  ): import("rxjs").Observable<any> | Promise<import("rxjs").Observable<any>> {
     DecorationsState.interceptorCalled = true;
     return next.handle();
   }
@@ -53,32 +56,27 @@ class TestInterceptor implements NestInterceptor {
 @Injectable()
 class TestGuard implements CanActivate {
   canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | import('rxjs').Observable<boolean> {
+    context: ExecutionContext
+  ): boolean | Promise<boolean> | import("rxjs").Observable<boolean> {
     DecorationsState.guardCaled = true;
     return true;
   }
 }
 
 @JSONRpcService({
-  namespace: 'test',
+  namespace: "test"
 })
-@Injectable({ scope: Scope.REQUEST })
 export class TestService {
   constructor() {
-    DecorationsState.serviceConstructorCount =
-      DecorationsState.serviceConstructorCount + 1;
-    console.log(
-      'TestService count now at',
-      DecorationsState.serviceConstructorCount,
-    );
+    DecorationsState.serviceConstructorCount = DecorationsState.serviceConstructorCount + 1;
+    console.log("TestService count now at", DecorationsState.serviceConstructorCount);
   }
 
   @UsePipes(TestPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
   public async invoke(params: any) {
-    console.log('Invoke WAS called');
+    console.log("Invoke WAS called");
     return params;
   }
 }

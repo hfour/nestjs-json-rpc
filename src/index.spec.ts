@@ -1,6 +1,6 @@
 import * as request from "supertest";
 import { Test, TestingModule } from "@nestjs/testing";
-import { INestMicroservice } from "@nestjs/common";
+import { INestMicroservice, INestApplication } from "@nestjs/common";
 import { TestService } from "./test-handler";
 import { JSONRPCServer } from ".";
 
@@ -9,8 +9,8 @@ describe("json-rpc-e2e", () => {
   let server: JSONRPCServer;
 
   beforeAll(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      providers: [TestService]
+    let moduleRef = await Test.createTestingModule({
+      controllers: [TestService]
     }).compile();
 
     server = new JSONRPCServer({
@@ -18,15 +18,15 @@ describe("json-rpc-e2e", () => {
       port: 8080
     });
 
-    app = moduleRef.createNestMicroservice({
-      strategy: server
-    });
-    await app.init();
+    app = moduleRef.createNestMicroservice({ strategy: server });
+    await new Promise(resolve => app.listen(resolve));
+    console.log("Done init");
   });
 
   it(`/GET cats`, () => {
     return request(server.server)
       .post("/rpc/v1")
+      .send({ method: "test.invoke", params: { data: "hi" } })
       .expect(200)
       .expect({
         data: "hi"

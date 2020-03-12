@@ -1,6 +1,11 @@
-import { SetMetadata } from "@nestjs/common";
+import { SetMetadata, Injectable, Controller } from "@nestjs/common";
 import * as express from "express";
-import { Server, CustomTransportStrategy } from "@nestjs/microservices";
+import {
+  Server,
+  CustomTransportStrategy,
+  MessagePattern,
+  MessageHandler
+} from "@nestjs/microservices";
 import * as http from "http";
 import { createBrotliCompress } from "zlib";
 
@@ -11,7 +16,20 @@ export interface RpcMetadata {
   namespace: string;
 }
 
-export const JSONRpcService = (metadata: RpcMetadata) => SetMetadata(RPC_METADATA_KEY, metadata);
+declare let __decorate: Function;
+
+export const JSONRpcService = (metadata: RpcMetadata) => {
+  return (constructor: Function) => {
+    __decorate([Injectable(), Controller()], constructor);
+    for (let key of Object.getOwnPropertyNames(constructor.prototype))
+      if (key !== "constructor") {
+        if (typeof constructor.prototype[key] === "function") {
+          let dec = MessagePattern(metadata.namespace + "." + key);
+          __decorate([dec], constructor.prototype, key, null);
+        }
+      }
+  };
+};
 
 export interface JSONRPCServerOptions {
   /**
@@ -45,16 +63,26 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
 
   public async listen(callback: () => void) {
     let app = express();
-    let handlers = this.getHandlers();
-    for (let [k, v] of handlers) {
-      console.log(k, v);
-    }
-    app.post(this.options.path, (req, res) => {
-      res.end("Hello world");
+
+    app.post(this.options.path, express.json(), async (req, res) => {
+      let handlers = this.getHandlers();
+
+      let handler = this.getHandlerByPattern(req.body.method);
+      if (handler == null) return res.status(404).json({ error: "Not Found" });
+      let response = await handler(req.body.params)
+        .then(res => res.toPromise())
+        .then(
+          value => ({ value }),
+          error => ({ error })
+        );
+
+      if ("error" in response) res.status(500).json({ error: response.error.message });
+      else res.status(200).json(response.value);
     });
-    this.server = await invokeAsync(cb => {
-      if (this.options.hostname != null) app.listen(this.options.port, this.options.hostname, cb);
-      else app.listen(this.options.port, cb);
+    await invokeAsync(cb => {
+      if (this.options.hostname != null)
+        this.server = app.listen(this.options.port, this.options.hostname, cb);
+      else this.server = app.listen(this.options.port, cb);
     });
     callback();
   }
