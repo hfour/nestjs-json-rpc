@@ -1,6 +1,8 @@
 # nestjs-json-rpc
 
-A JSONRPC microservice strategy implementation for NestJS
+A JSONRPC microservice strategy implementation for NestJS.
+
+Currently uses HTTP as the transport layer, with plans to add other options as the need arises.
 
 ## Install
 
