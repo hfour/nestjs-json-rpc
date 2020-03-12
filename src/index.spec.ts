@@ -20,10 +20,9 @@ describe("json-rpc-e2e", () => {
 
     app = moduleRef.createNestMicroservice({ strategy: server });
     await new Promise(resolve => app.listen(resolve));
-    console.log("Done init");
   });
 
-  it(`/GET cats`, () => {
+  it(`works`, () => {
     return request(server.server)
       .post("/rpc/v1")
       .send({ method: "test.invoke", params: { data: "hi" } })

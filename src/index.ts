@@ -1,21 +1,15 @@
-import { SetMetadata, Injectable, Controller } from "@nestjs/common";
 import * as express from "express";
-import {
-  Server,
-  CustomTransportStrategy,
-  MessagePattern,
-  MessageHandler
-} from "@nestjs/microservices";
+import { Server, CustomTransportStrategy } from "@nestjs/microservices";
 import * as http from "http";
-import { createBrotliCompress } from "zlib";
-
-const RPC_METADATA_KEY = "__json-rpc-metadata__";
-const JSON_RPC_OPTIONS = "__json-rpc-options__";
+import { invokeAsync } from "./util";
+import { Injectable, Controller } from "@nestjs/common";
+import { MessagePattern } from "@nestjs/microservices";
 
 export interface RpcMetadata {
   namespace: string;
 }
 
+// TODO: check if there is a better method to manually apply decorators
 declare let __decorate: Function;
 
 export const JSONRpcService = (metadata: RpcMetadata) => {
@@ -46,14 +40,6 @@ export interface JSONRPCServerOptions {
   path: string;
 }
 
-function invokeAsync<U>(fn: (cb: (err: Error | undefined | null, res?: U) => void) => void) {
-  return new Promise<U>((resolve, reject) => {
-    fn((err, res) => {
-      if (err) reject(err);
-      else resolve(res);
-    });
-  });
-}
 export class JSONRPCServer extends Server implements CustomTransportStrategy {
   public server: http.Server | null = null;
 

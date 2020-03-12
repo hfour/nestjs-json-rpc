@@ -9,12 +9,10 @@ import {
   ArgumentMetadata,
   UseInterceptors,
   UseGuards,
-  Scope,
-  Controller
+  Scope
 } from "@nestjs/common";
 
 import { JSONRpcService } from ".";
-import { MessagePattern } from "@nestjs/microservices";
 
 const initialModuleState = {
   pipeCalled: false,
@@ -27,7 +25,6 @@ const initialModuleState = {
 export let DecorationsState = Object.assign({}, initialModuleState);
 
 export function resetDecorationsState() {
-  console.log("Reset count");
   Object.assign(DecorationsState, initialModuleState);
 }
 
