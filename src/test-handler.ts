@@ -30,7 +30,7 @@ export function resetDecorationsState() {
 
 @Injectable()
 class TestPipe implements PipeTransform {
-  transform(value: any, metadata: ArgumentMetadata) {
+  transform(value: any, _metadata: ArgumentMetadata) {
     DecorationsState.pipeCalled = true;
     return value;
   }
@@ -41,8 +41,9 @@ class TestInterceptor implements NestInterceptor {
   constructor() {
     DecorationsState.interceptorConstructorCount++;
   }
+
   intercept(
-    context: ExecutionContext,
+    _context: ExecutionContext,
     next: CallHandler<any>
   ): import("rxjs").Observable<any> | Promise<import("rxjs").Observable<any>> {
     DecorationsState.interceptorCalled = true;
@@ -53,7 +54,7 @@ class TestInterceptor implements NestInterceptor {
 @Injectable()
 class TestGuard implements CanActivate {
   canActivate(
-    context: ExecutionContext
+    _context: ExecutionContext
   ): boolean | Promise<boolean> | import("rxjs").Observable<boolean> {
     DecorationsState.guardCaled = true;
     return true;
