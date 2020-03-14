@@ -1,16 +1,21 @@
 # nestjs-json-rpc
 
-A JSONRPC microservice strategy implementation for NestJS.
+[Docs](https://github.com/hfour/nestjs-json-rpc/wiki/Documentation) |
+[Contributing](https://github.com/hfour/nestjs-json-rpc/wiki/Contributing) |
+[Wiki](https://github.com/hfour/nestjs-json-rpc/wiki) |
+[MIT Licensed](LICENSE.md)
+
+A JSON-RPC microservice strategy implementation for NestJS.
 
 Currently uses HTTP as the transport layer, with plans to add other options as the need arises.
 
 ## Install
 
-yarn add @hfour/nestjs-json-rpc
+`yarn add @hfour/nestjs-json-rpc`
 
 ## Usage example
 
-Initialize similar to a regular microservice, but pass a JSONRPCServier as the strategy option:
+Initialize similar to a regular microservice, but pass a `JSONRPCService` as the strategy option:
 
 ```typescript
 const app = await NestFactory.createMicroservice(ApplicationModule, {
@@ -21,7 +26,7 @@ const app = await NestFactory.createMicroservice(ApplicationModule, {
 });
 ```
 
-Decorate your controllers with @JSONRPCService
+Decorate your controllers with `@JSONRPCService`:
 
 ```typescript
 @JSONRpcService({
@@ -35,7 +40,7 @@ export class TestService {
 }
 ```
 
-All the methods of the service will automatically be added with the name `<namespace>.<method>`
+All the methods of the service will automatically be added with the name `<namespace>.<method>`.
 
 Use any standard microservice decorators:
 
@@ -47,7 +52,3 @@ Use any standard microservice decorators:
     //...
   }
 ```
-
-## Licence
-
-MIT

@@ -1,6 +1,8 @@
 import * as request from "supertest";
-import { Test, TestingModule } from "@nestjs/testing";
-import { INestMicroservice, INestApplication } from "@nestjs/common";
+
+import { Test } from "@nestjs/testing";
+import { INestMicroservice } from "@nestjs/common";
+
 import { TestService } from "./test-handler";
 import { JSONRPCServer } from ".";
 
@@ -22,7 +24,7 @@ describe("json-rpc-e2e", () => {
     await new Promise(resolve => app.listen(resolve));
   });
 
-  it(`works`, () => {
+  it(`/rpc/v1/ test.invoke (POST)`, () => {
     return request(server.server)
       .post("/rpc/v1")
       .send({ method: "test.invoke", params: { data: "hi" } })
