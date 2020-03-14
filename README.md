@@ -15,7 +15,7 @@ Currently uses HTTP as the transport layer, with plans to add other options as t
 
 ## Usage example
 
-Initialize similar to a regular microservice, but pass a `JSONRPCServier` as the strategy option:
+Initialize similar to a regular microservice, but pass a `JSONRPCService` as the strategy option:
 
 ```typescript
 const app = await NestFactory.createMicroservice(ApplicationModule, {

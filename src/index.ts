@@ -6,7 +6,31 @@ import { Injectable, Controller } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
 
 import { invokeAsync } from "./util";
-import { JSONRPCServerOptions, RpcMetadata } from "./interfaces"
+
+////////////////
+// INTERFACES //
+////////////////
+
+export interface JSONRPCServerOptions {
+  /**
+   * Listening port for the HTTP server
+   */
+  port: number;
+  /**
+   * Listening host (optional, defaults to any)
+   */
+  hostname?: string;
+  /*
+      * The path at which the JSON RPC endpoint should be mounted
+      */
+  path: string;
+}
+
+export interface RpcMetadata {
+  namespace: string;
+}
+
+////////////////
 
 // TODO: check if there is a better method to manually apply decorators
 declare let __decorate: Function;
