@@ -45,10 +45,10 @@ All the methods of the service will automatically be added with the name `<names
 Use any standard microservice decorators:
 
 ```typescript
-  @UsePipes(TestPipe)
-  @UseInterceptors(TestInterceptor)
-  @UseGuards(TestGuard)
-  public async myMethod(params: any) {
-    //...
-  }
+@UsePipes(TestPipe)
+@UseInterceptors(TestInterceptor)
+@UseGuards(TestGuard)
+public async myMethod(params: any) {
+  //...
+}
 ```
