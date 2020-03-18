@@ -8,7 +8,7 @@ export class AppService {
   async getRpcResponse() {
     console.log('send to server');
     return await this.http
-      .post('http://localhost:8082/rpc/v1', {
+      .post('http://localhost:8080/rpc/v1', {
         method: 'test.myMethod',
         params: { data: 'hi' },
       })
