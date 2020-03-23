@@ -49,7 +49,7 @@ describe("json-rpc-e2e", () => {
       .expect(403)
       .expect(errorObj);
 
-      // The testing with expect(req).rejects doesn't work
+    // The testing with expect(req).rejects doesn't work
 
     // const req = request(server.server)
     //   .post("/rpc/v1")
@@ -60,7 +60,7 @@ describe("json-rpc-e2e", () => {
     //     fromService: "Test Service",
     //     params: { data: "hi" }
     //   })
-    );
+    //);
   });
 
   afterAll(async () => {
