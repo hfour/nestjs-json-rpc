@@ -3,7 +3,7 @@ import * as request from "supertest";
 import { Test } from "@nestjs/testing";
 import { INestMicroservice } from "@nestjs/common";
 
-import { TestService } from "./test-handler";
+import { TestService, CodedRpcException } from "./test-handler";
 import { JSONRPCServer } from ".";
 
 describe("json-rpc-e2e", () => {
@@ -32,6 +32,35 @@ describe("json-rpc-e2e", () => {
       .expect({
         data: "hi"
       });
+  });
+
+  it(`should throw an error on /rpc/v1/ test.testError (POST)`, () => {
+    const errorObj = {
+      message: "RPC EXCEPTION",
+      code: 403,
+      data: {
+        fromService: "Test Service",
+        params: { data: "hi" }
+      }
+    };
+    return request(server.server)
+      .post("/rpc/v1")
+      .send({ method: "test.testError", params: { data: "hi" } })
+      .expect(403)
+      .expect(errorObj);
+
+      // The testing with expect(req).rejects doesn't work
+
+    // const req = request(server.server)
+    //   .post("/rpc/v1")
+    //   .send({ method: "test.testError", params: { data: "hi" } });
+
+    // expect(req).rejects.toEqual(
+    //   new CodedRpcException("RPC EXCEPTION", 403, {
+    //     fromService: "Test Service",
+    //     params: { data: "hi" }
+    //   })
+    );
   });
 
   afterAll(async () => {

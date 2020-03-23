@@ -21,8 +21,8 @@ export interface JSONRPCServerOptions {
    */
   hostname?: string;
   /*
-      * The path at which the JSON RPC endpoint should be mounted
-      */
+   * The path at which the JSON RPC endpoint should be mounted
+   */
   path: string;
 }
 
@@ -73,8 +73,13 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
           error => ({ error })
         );
 
+      console.log(response);
+
       if ("error" in response) {
-        res.status(500).json({ error: response.error.message })
+        let resp = { code: 500, message: response.error.message, data: undefined };
+        if ("code" in response.error) resp.code = response.error.code;
+        if ("data" in response.error) resp.data = response.error.data;
+        res.status(resp.code).json(resp);
       } else {
         res.status(200).json(response.value);
       }
