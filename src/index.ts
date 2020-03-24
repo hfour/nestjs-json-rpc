@@ -1,7 +1,7 @@
 import * as express from "express";
 import * as http from "http";
 
-import { Server, CustomTransportStrategy } from "@nestjs/microservices";
+import { Server, CustomTransportStrategy, RpcException } from "@nestjs/microservices";
 import { Injectable, Controller } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
 
@@ -73,8 +73,6 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
           error => ({ error })
         );
 
-      console.log(response);
-
       if ("error" in response) {
         let resp = { code: 500, message: response.error.message, data: undefined };
         if ("code" in response.error) resp.code = response.error.code;
@@ -99,5 +97,11 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
   public async close() {
     await invokeAsync(cb => this.server && this.server.close(cb));
     // do nothing, maybe block further requests
+  }
+}
+
+export class CodedRpcException extends RpcException {
+  constructor(message: string, public code: number = 500, public data: any = {}) {
+    super({ message, code, data });
   }
 }

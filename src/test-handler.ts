@@ -12,8 +12,7 @@ import {
   Scope
 } from "@nestjs/common";
 
-import { JSONRpcService } from ".";
-import { RpcException } from "@nestjs/microservices";
+import { JSONRpcService, CodedRpcException } from ".";
 
 const initialModuleState = {
   pipeCalled: false,
@@ -83,15 +82,7 @@ export class TestService {
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
   public async testError(params: any) {
-    console.log("Throw an error !!!");
-
     // construct the error object with some data inside
     throw new CodedRpcException("RPC EXCEPTION", 403, { fromService: "Test Service", params });
-  }
-}
-
-export class CodedRpcException extends RpcException {
-  constructor(message: string, public code: number = 500, public data: any = {}) {
-    super({ message, code, data });
   }
 }
