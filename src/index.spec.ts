@@ -34,6 +34,22 @@ describe("json-rpc-e2e", () => {
       });
   });
 
+  it(`should throw an error on /rpc/v1/ test.testError (POST)`, () => {
+    const errorObj = {
+      message: "RPC EXCEPTION",
+      code: 403,
+      data: {
+        fromService: "Test Service",
+        params: { data: "hi" }
+      }
+    };
+    return request(server.server)
+      .post("/rpc/v1")
+      .send({ method: "test.testError", params: { data: "hi" } })
+      .expect(403)
+      .expect(errorObj);
+  });
+
   afterAll(async () => {
     await app.close();
   });
