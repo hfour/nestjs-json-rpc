@@ -56,13 +56,14 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
   }
 
   public async listen(callback: () => void) {
-    console.log("Server listening on 8080");
     let app = express();
 
     app.post(this.options.path, express.json(), async (req, res) => {
       // let handlers = this.getHandlers();
+      console.log(req.body);
 
       let handler = this.getHandlerByPattern(req.body.method);
+      console.log(handler);
       if (handler == null) {
         return res.status(404).json({ error: "Not Found" });
       }
@@ -96,7 +97,6 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
   }
 
   public async close() {
-    console.log("Closing server");
     await invokeAsync(cb => this.server && this.server.close(cb));
     // do nothing, maybe block further requests
   }

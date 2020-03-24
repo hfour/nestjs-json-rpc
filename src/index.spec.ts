@@ -3,7 +3,7 @@ import * as request from "supertest";
 import { Test } from "@nestjs/testing";
 import { INestMicroservice, ServiceUnavailableException } from "@nestjs/common";
 
-import { TestService, TestClientService } from "./test-handler";
+import { TestService } from "./test-handler";
 import { JSONRPCServer } from ".";
 import { JSONRPCClient } from "./client-proxy";
 
@@ -54,9 +54,11 @@ describe("json-rpc-e2e", () => {
   it(`should make and RPC call with the JSONRPCClient`, () => {
     console.log("Testing RPC CLient");
     const client = new JSONRPCClient("http://localhost:8080/rpc/v1");
-    const service = client.getService<TestClientService>("test.service");
+    const service = client.getService<TestService>("test");
 
-    return service.invokeService({ data: "hi" }).then(res => expect(res.data).toBe("hi"));
+    return service
+      .invokeClientService({ data: "hi" })
+      .then(res => expect(res.data).toStrictEqual({ data: "hi" }));
   });
 
   afterAll(async () => {
