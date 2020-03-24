@@ -78,3 +78,23 @@ export class TestService {
     return params;
   }
 }
+
+@JSONRpcService({
+  namespace: "test.service"
+})
+export class TestClientService implements ITestClientService {
+  constructor() {
+    DecorationsState.serviceConstructorCount = DecorationsState.serviceConstructorCount + 1;
+    console.log("TestService count now at", DecorationsState.serviceConstructorCount);
+  }
+
+  @UsePipes(TestPipe)
+  @UseInterceptors(TestInterceptor)
+  @UseGuards(TestGuard)
+  public async invokeService(params: any) {
+    console.log("Invoke Client Service WAS called");
+    return params;
+  }
+}
+
+export interface ITestClientService {}
