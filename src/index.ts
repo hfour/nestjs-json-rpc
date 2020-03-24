@@ -1,7 +1,7 @@
 import * as express from "express";
 import * as http from "http";
 
-import { Server, CustomTransportStrategy } from "@nestjs/microservices";
+import { Server, CustomTransportStrategy, RpcException } from "@nestjs/microservices";
 import { Injectable, Controller } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
 
@@ -56,6 +56,7 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
   }
 
   public async listen(callback: () => void) {
+    console.log("Server listening on 8080");
     let app = express();
 
     app.post(this.options.path, express.json(), async (req, res) => {
@@ -74,7 +75,10 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
         );
 
       if ("error" in response) {
-        res.status(500).json({ error: response.error.message });
+        let resp = { code: 500, message: response.error.message, data: undefined };
+        if ("code" in response.error) resp.code = response.error.code;
+        if ("data" in response.error) resp.data = response.error.data;
+        res.status(resp.code).json(resp);
       } else {
         res.status(200).json(response.value);
       }
@@ -92,7 +96,14 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
   }
 
   public async close() {
+    console.log("Closing server");
     await invokeAsync(cb => this.server && this.server.close(cb));
     // do nothing, maybe block further requests
+  }
+}
+
+export class CodedRpcException extends RpcException {
+  constructor(message: string, public code: number = 500, public data: any = {}) {
+    super({ message, code, data });
   }
 }

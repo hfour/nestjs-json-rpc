@@ -30,7 +30,9 @@ export class JSONRPCClient extends ClientProxy {
       {
         get(obj, prop) {
           return function(params: any) {
-            axios.post(url, { method: namespace + "." + prop.toString(), params, jsonrpc: "2.0" });
+            axios
+              .post(url, { method: namespace + "." + prop.toString(), params, jsonrpc: "2.0" })
+              .then(res => Promise.resolve(res));
           };
         }
       }
