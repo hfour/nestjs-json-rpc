@@ -61,6 +61,23 @@ describe("json-rpc-e2e", () => {
       .then(res => expect(res.data).toStrictEqual({ data: "hi" }));
   });
 
+  it(`should return an error from JSONRPCClient call`, () => {
+    console.log("Testing RPC CLient");
+    const client = new JSONRPCClient("http://localhost:8080/rpc/v1");
+    const service = client.getService<TestService>("test");
+
+    const errorObj = {
+      message: "RPC EXCEPTION",
+      code: 403,
+      data: {
+        fromService: "Test Service",
+        params: { data: "hi" }
+      }
+    };
+
+    return service.testError({ data: "hi" }).then(res => expect(res).toStrictEqual(errorObj));
+  });
+
   afterAll(async () => {
     await app.close();
   });

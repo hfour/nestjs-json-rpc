@@ -60,7 +60,6 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
 
     app.post(this.options.path, express.json(), async (req, res) => {
       // let handlers = this.getHandlers();
-      console.log(req.body);
 
       let handler = this.getHandlerByPattern(req.body.method);
       console.log(handler);

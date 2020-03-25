@@ -1,5 +1,6 @@
 import { ClientProxy } from "@nestjs/microservices";
 import axios from "axios";
+import { resolve } from "dns";
 
 export class JSONRPCClient extends ClientProxy {
   constructor(private readonly url: string) {
@@ -30,13 +31,15 @@ export class JSONRPCClient extends ClientProxy {
       {
         get(obj, prop) {
           return function(params: any) {
-            // console.log(url);
-            // console.log(namespace);
-            // console.log(prop.toString());
-            // console.log(params);
             return axios
               .post(url, { method: namespace + "." + prop.toString(), params, jsonrpc: "2.0" })
-              .then(res => Promise.resolve(res));
+              .then(res => Promise.resolve(res))
+              .catch(err => {
+                const { code, message, data } = err.response.data;
+                let resp = { code, message, data };
+
+                return Promise.resolve(resp);
+              });
           };
         }
       }

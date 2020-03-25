@@ -97,4 +97,5 @@ export class TestService implements ITestClientService {
 
 export interface ITestClientService {
   invokeClientService(params: any): any;
+  testError(params: any): any;
 }
