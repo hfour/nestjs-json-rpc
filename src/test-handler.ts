@@ -81,7 +81,7 @@ export class TestService implements ITestClientService {
   @UsePipes(TestPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
-  public async testError(params: any) {
+  public async testError(params: any): Promise<any> {
     // construct the error object with some data inside
     throw new CodedRpcException("RPC EXCEPTION", 403, { fromService: "Test Service", params });
   }
@@ -96,6 +96,7 @@ export class TestService implements ITestClientService {
 }
 
 export interface ITestClientService {
+  invoke(params: any): any;
   invokeClientService(params: any): any;
-  testError(params: any): any;
+  testError(params: any): Promise<any>;
 }
