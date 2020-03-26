@@ -43,12 +43,12 @@ export class JSONRPCClient extends ClientProxy {
                 jsonrpc: "2.0",
                 id: ++id
               })
-              .then(res => Promise.resolve({ jsonrpc, result: res, id }))
+              .then(res => ({ jsonrpc, result: res, id }))
               .catch(err => {
                 const { code, message, data } = err.response.data;
                 let resp = { code, message, data };
 
-                return Promise.resolve({ jsonrpc, error: resp, id });
+                return { jsonrpc, error: resp, id };
               });
           };
         }

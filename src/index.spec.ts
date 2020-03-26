@@ -37,15 +37,34 @@ describe("json-rpc-e2e", () => {
       .then(res => expect(res.result.data).toStrictEqual({ data: "hi" }));
   });
 
-  it(`should return an error from JSONRPCClient call`, () => {
+  it(`should check error object properties from JSONRPCClient call`, () => {
+    const jsonRpcErrorObj = {
+      id: expect.stringMatching,
+      jsonrpc: "",
+      error: {
+        message: "",
+        code: 403,
+        data: {
+          fromService: "",
+          params: { data: "" }
+        }
+      }
+    };
+    return service.testError({ data: "hi" }).then(res => {
+      expect(res).toHaveProperty("id");
+      expect(res).toHaveProperty("jsonrpc");
+      expect(res).toHaveProperty("error");
+    });
+  });
+
+  it(`should return an error and check error data from JSONRPCClient call`, () => {
     const errorObj = {
       message: "RPC EXCEPTION",
       code: 403,
       data: {
         fromService: "Test Service",
         params: { data: "hi" }
-      },
-      id: 2
+      }
     };
 
     return service.testError({ data: "hi" }).then(res => expect(res.error).toStrictEqual(errorObj));
