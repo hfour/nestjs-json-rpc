@@ -1,6 +1,7 @@
 import { ClientProxy } from "@nestjs/microservices";
 import axios from "axios";
 import { resolve } from "dns";
+import { CodedRpcException } from ".";
 
 export class JSONRPCClient extends ClientProxy {
   constructor(private readonly url: string) {
@@ -29,7 +30,7 @@ export class JSONRPCClient extends ClientProxy {
   }
   getService<SvcInterface>(namespace: string): ServiceClient<SvcInterface> {
     let url = this.url;
-    let id = this.counter;
+    let id = ++this.counter;
     let jsonrpc = this.jsonrpc;
     return new Proxy(
       {},
@@ -41,14 +42,13 @@ export class JSONRPCClient extends ClientProxy {
                 method: namespace + "." + prop.toString(),
                 params,
                 jsonrpc: "2.0",
-                id: ++id
+                id
               })
               .then(res => ({ jsonrpc, result: res, id }))
               .catch(err => {
                 const { code, message, data } = err.response.data;
-                let resp = { code, message, data };
 
-                return { jsonrpc, error: resp, id };
+                throw new CodedRpcException(message, code, data);
               });
           };
         }

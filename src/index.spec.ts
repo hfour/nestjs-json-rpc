@@ -4,7 +4,7 @@ import { Test } from "@nestjs/testing";
 import { INestMicroservice, ServiceUnavailableException } from "@nestjs/common";
 
 import { TestService } from "./test-handler";
-import { JSONRPCServer } from ".";
+import { JSONRPCServer, CodedRpcException } from ".";
 import { JSONRPCClient } from "./client-proxy";
 
 describe("json-rpc-e2e", () => {
@@ -37,27 +37,7 @@ describe("json-rpc-e2e", () => {
       .then(res => expect(res.result.data).toStrictEqual({ data: "hi" }));
   });
 
-  it(`should check error object properties from JSONRPCClient call`, () => {
-    const jsonRpcErrorObj = {
-      id: expect.stringMatching,
-      jsonrpc: "",
-      error: {
-        message: "",
-        code: 403,
-        data: {
-          fromService: "",
-          params: { data: "" }
-        }
-      }
-    };
-    return service.testError({ data: "hi" }).then(res => {
-      expect(res).toHaveProperty("id");
-      expect(res).toHaveProperty("jsonrpc");
-      expect(res).toHaveProperty("error");
-    });
-  });
-
-  it(`should return an error and check error data from JSONRPCClient call`, () => {
+  it(`should return an error and check error data from JSONRPCClient call`, async () => {
     const errorObj = {
       message: "RPC EXCEPTION",
       code: 403,
@@ -66,8 +46,8 @@ describe("json-rpc-e2e", () => {
         params: { data: "hi" }
       }
     };
-
-    return service.testError({ data: "hi" }).then(res => expect(res.error).toStrictEqual(errorObj));
+    const resp = service.testError({ data: "hi" });
+    return expect(resp).rejects.toThrowError();
   });
 
   afterAll(async () => {
