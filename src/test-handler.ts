@@ -64,7 +64,7 @@ class TestGuard implements CanActivate {
 @JSONRpcService({
   namespace: "test"
 })
-export class TestService {
+export class TestService implements ITestClientService {
   constructor() {
     DecorationsState.serviceConstructorCount = DecorationsState.serviceConstructorCount + 1;
     console.log("TestService count now at", DecorationsState.serviceConstructorCount);
@@ -81,8 +81,22 @@ export class TestService {
   @UsePipes(TestPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
-  public async testError(params: any) {
+  public async testError(params: any): Promise<any> {
     // construct the error object with some data inside
     throw new CodedRpcException("RPC EXCEPTION", 403, { fromService: "Test Service", params });
   }
+
+  @UsePipes(TestPipe)
+  @UseInterceptors(TestInterceptor)
+  @UseGuards(TestGuard)
+  public async invokeClientService(params: any) {
+    console.log("Invoke Client Service WAS called");
+    return params;
+  }
+}
+
+export interface ITestClientService {
+  invoke(params: any): any;
+  invokeClientService(params: any): any;
+  testError(params: any): Promise<any>;
 }

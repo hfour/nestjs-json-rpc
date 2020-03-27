@@ -62,6 +62,7 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
       // let handlers = this.getHandlers();
 
       let handler = this.getHandlerByPattern(req.body.method);
+
       if (handler == null) {
         return res.status(404).json({ error: "Not Found" });
       }
