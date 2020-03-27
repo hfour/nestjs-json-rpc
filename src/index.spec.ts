@@ -38,16 +38,15 @@ describe("json-rpc-e2e", () => {
   });
 
   it(`should return an error and check error data from JSONRPCClient call`, async () => {
-    const errorObj = {
-      message: "RPC EXCEPTION",
-      code: 403,
-      data: {
+    const expectedCodedException = expect.objectContaining(
+      new CodedRpcException("RPC EXCEPTION", 403, {
         fromService: "Test Service",
         params: { data: "hi" }
-      }
-    };
+      })
+    );
+
     const resp = service.testError({ data: "hi" });
-    return expect(resp).rejects.toThrowError();
+    return expect(resp).rejects.toThrowError(expectedCodedException);
   });
 
   afterAll(async () => {
