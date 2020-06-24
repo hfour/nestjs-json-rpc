@@ -42,7 +42,7 @@ export class TestService implements ITestService {
 
 All the methods of the service will automatically be added with the name `<namespace>.<method>`.
 
-Use any standard microservice decorators you would like to use
+Use any standard microservice decorators you would like to use:
 
 ```typescript
 @UsePipes(TestPipe)
@@ -60,13 +60,11 @@ The standard way to use these decorators would be:
 * All other aspect oriented programming bits (logging, tracing performance measurements etc): use [NestJS Interceptors](https://docs.nestjs.com/interceptors)
 
 
-
-
 ### Client
 
-nestjs-json-rpc also comes with a way to create clients! 
+`nestjs-json-rpc` also comes with a way to create clients! 
 
-Simply initialize the client in any other service, then ask it to create a proxy for TestService for the given namespace:
+Simply initialize the client in any other service, then ask it to create a proxy for `TestService` for the given namespace:
 
 ```typescript
 @injectable()
@@ -84,7 +82,7 @@ class MyServiceClient {
 
 ## Errors
 
-nestjs-json-rpc comes with `CodedRpcException`, which as per JSONRPC spec allows you to include an error code and additional data to the error. The error is reconstructed on the client and you can access and check the code and the data there as well.
+`nestjs-json-rpc` comes with `CodedRpcException`, which as per `JSONRPC` spec allows you to include an error code and additional data to the error. The error is reconstructed on the client and you can access and check the code and the data there as well.
 
 Feel free to define your own code constants and declare a union of the types in order to be able to discriminate the codes: 
 
