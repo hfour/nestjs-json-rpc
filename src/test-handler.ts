@@ -73,7 +73,7 @@ export class TestService implements ITestClientService {
   @UsePipes(TestPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
-  public async invoke(params: any) {
+  public async invoke(params: { test: string }) {
     console.log("Invoke WAS called");
     return params;
   }
@@ -81,7 +81,7 @@ export class TestService implements ITestClientService {
   @UsePipes(TestPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
-  public async testError(params: any): Promise<any> {
+  public async testError(params: { errorTest: string }) {
     // construct the error object with some data inside
     throw new CodedRpcException("RPC EXCEPTION", 403, { fromService: "Test Service", params });
   }
@@ -89,14 +89,14 @@ export class TestService implements ITestClientService {
   @UsePipes(TestPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
-  public async invokeClientService(params: any) {
+  public async invokeClientService(params: { test: string }) {
     console.log("Invoke Client Service WAS called");
     return params;
   }
 }
 
 export interface ITestClientService {
-  invoke(params: any): any;
-  invokeClientService(params: any): any;
-  testError(params: any): Promise<any>;
+  invoke(params: { test: string }): Promise<{ test: string }>;
+  invokeClientService(params: { test: string }): Promise<{ test: string }>;
+  testError(params: { errorTest: string }): Promise<void>;
 }

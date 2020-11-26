@@ -44,7 +44,7 @@ export class JSONRPCClient extends ClientProxy {
                 jsonrpc: "2.0",
                 id
               })
-              .then(res => ({ jsonrpc, result: res, id }))
+              .then(res => res.data)
               .catch(err => {
                 const { code, message, data } = err.response.data;
 
