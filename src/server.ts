@@ -67,15 +67,13 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
         return res.status(404).json({ error: "Not Found" });
       }
 
-      let response = await handler(req.body.params)
-        .then(res => {
-          console.log(res);
-          return res.toPromise();
-        })
-        .then(
-          value => ({ value }),
-          error => ({ error })
-        );
+      let observableResult = this.transformToObservable(await handler(req.body.params));
+      let promiseResult = observableResult.toPromise();
+
+      let response = await promiseResult.then(
+        value => ({ value }),
+        error => ({ error })
+      );
 
       if ("error" in response) {
         let resp = { code: 500, message: response.error.message, data: undefined };
