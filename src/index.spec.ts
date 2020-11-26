@@ -1,10 +1,8 @@
-import * as request from "supertest";
-
 import { Test } from "@nestjs/testing";
-import { INestMicroservice, ServiceUnavailableException } from "@nestjs/common";
+import { INestMicroservice } from "@nestjs/common";
 
 import { TestService } from "./test-handler";
-import { JSONRPCServer, CodedRpcException } from ".";
+import { JSONRPCServer, CodedRpcException } from "./index";
 import { JSONRPCClient } from "./client-proxy";
 
 describe("json-rpc-e2e", () => {
@@ -28,7 +26,7 @@ describe("json-rpc-e2e", () => {
     service = client.getService<TestService>("test");
 
     app = moduleRef.createNestMicroservice({ strategy: server });
-    await new Promise(resolve => app.listen(resolve));
+    await app.listenAsync();
   });
 
   it(`should make and RPC call with the JSONRPCClient`, () => {
