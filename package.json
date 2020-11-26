@@ -8,6 +8,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepublish": "tsc -p tsconfig.json",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
