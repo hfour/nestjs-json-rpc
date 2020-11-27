@@ -26,13 +26,14 @@ const app = await NestFactory.createMicroservice(ApplicationModule, {
 });
 ```
 
-Decorate your controllers with `@JsonRpcService`:
+Decorate your controllers with the `@RpcService` and `@RpcMethod` decorators:
 
 ```typescript
-@JSONRpcService({
+@RpcService({
   namespace: "test"
 })
 export class TestService implements ITestService {
+  @RpcMethod()
   public async myMethod(params: any) {
     console.log("The method called was test.myMethod");
     return params;
@@ -48,12 +49,13 @@ Use any standard microservice decorators you would like to use:
 @UsePipes(TestPipe)
 @UseInterceptors(TestInterceptor)
 @UseGuards(TestGuard)
+@RpcMethod()
 public async myMethod(params: any) {
   //...
 }
 ```
 
-The standard way to use these decorators would be:
+For the different types of decorators, see:
 
 - Input validation and transformation - use [NestJS Pipes](https://docs.nestjs.com/pipes)
 - Access control checks, permission, role checks - use [NestJS Guards](https://docs.nestjs.com/guards)
@@ -67,7 +69,7 @@ The standard way to use these decorators would be:
 Simply initialize the client in any other service, then ask it to create a proxy for `TestService` for the given namespace:
 
 ```typescript
-@injectable()
+@Injectable()
 class MyServiceClient {
   private client = new JsonRpcClient("http://localhost:8080/rpc/v1");
   private service = this.client.getService<ITestService>("test");
@@ -79,9 +81,45 @@ class MyServiceClient {
 }
 ```
 
+You may also pass client headers to be sent with every request, such as the authorization token
+
+```typescript
+let client = new JsonRpcClient("http://localhost:8080/rpc/v1", {
+  Authorization: `Bearer ${token}`
+});
+```
+
+## Context
+
+You can access additional metadata info about the request (such as headers) using the context.
+
+For example, to access the `Authorization` header within a guard:
+
+```typescript
+@Injectable()
+class TestGuard implements CanActivate {
+  canActivate(
+    ctx: ExecutionContext
+  ): boolean | Promise<boolean> | import("rxjs").Observable<boolean> {
+    let authData = ctx
+      .switchToRpc()
+      .getContext<JsonRpcContext>()
+      .getMetadataByKey("Authorization");
+
+    if (authMetadata) {
+      // ... check token
+      return true;
+    }
+    return false;
+  }
+}
+```
+
+To enable different transports in the future, the metadata mechanism doesn't reveal the metadata transport method. This should allow for the option to implement a different (e.g. TCP based) transport in the future.
+
 ## Errors
 
-`nestjs-json-rpc` comes with `CodedRpcException`, which as per `JSONRPC` spec allows you to include an error code and additional data to the error. The error is reconstructed on the client and you can access and check the code and the data there as well.
+`nestjs-json-rpc` comes with `CodedRpcException`, which as per JSONRPC spec allows you to include an error code and additional data to the error. The error is reconstructed on the client and you can access and check the code and the data there as well.
 
 Feel free to define your own code constants and declare a union of the types in order to be able to discriminate the codes:
 
