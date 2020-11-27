@@ -12,7 +12,7 @@ import {
   Scope
 } from "@nestjs/common";
 
-import { JSONRpcService, CodedRpcException } from ".";
+import { CodedRpcException, RpcMethod, RpcService } from ".";
 
 const initialModuleState = {
   pipeCalled: false,
@@ -61,26 +61,26 @@ class TestGuard implements CanActivate {
   }
 }
 
-@JSONRpcService({
+@RpcService({
   namespace: "test"
 })
 export class TestService implements ITestClientService {
   constructor() {
     DecorationsState.serviceConstructorCount = DecorationsState.serviceConstructorCount + 1;
-    console.log("TestService count now at", DecorationsState.serviceConstructorCount);
   }
 
   @UsePipes(TestPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
+  @RpcMethod()
   public async invoke(params: { test: string }) {
-    console.log("Invoke WAS called");
     return params;
   }
 
   @UsePipes(TestPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
+  @RpcMethod()
   public async testError(params: { errorTest: string }) {
     // construct the error object with some data inside
     throw new CodedRpcException("RPC EXCEPTION", 403, { fromService: "Test Service", params });
@@ -89,8 +89,12 @@ export class TestService implements ITestClientService {
   @UsePipes(TestPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
+  @RpcMethod()
   public async invokeClientService(params: { test: string }) {
-    console.log("Invoke Client Service WAS called");
+    return params;
+  }
+
+  public async notExposed(params: { test: string }) {
     return params;
   }
 }

@@ -2,8 +2,7 @@ import { Test } from "@nestjs/testing";
 import { INestMicroservice } from "@nestjs/common";
 
 import { TestService } from "./test-handler";
-import { JSONRPCServer, CodedRpcException } from "./index";
-import { JSONRPCClient } from "./client-proxy";
+import { JSONRPCServer, JSONRPCClient, CodedRpcException } from ".";
 
 describe("json-rpc-e2e", () => {
   let app: INestMicroservice;
@@ -42,7 +41,13 @@ describe("json-rpc-e2e", () => {
     });
 
     const resp = service.testError({ errorTest: "hi" });
-    return expect(resp).rejects.toThrowError(expectedCodedException);
+    await expect(resp).rejects.toThrowError(expectedCodedException);
+  });
+
+  it(`should fail to invoke unexposed methods`, async () => {
+    const expectedCodedException = new CodedRpcException("Method not found: test.notExposed", 404);
+    const resp = service.notExposed({ test: "data" });
+    await expect(resp).rejects.toThrowError(expectedCodedException);
   });
 
   afterAll(async () => {

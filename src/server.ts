@@ -6,10 +6,8 @@ import { Injectable, Controller } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
 
 import { invokeAsync } from "./util";
-
-////////////////
-// INTERFACES //
-////////////////
+import { JSONRPCResponse } from "./transport-types";
+import { CodedRpcException } from "./coded-error";
 
 export interface JSONRPCServerOptions {
   /**
@@ -26,31 +24,35 @@ export interface JSONRPCServerOptions {
   path: string;
 }
 
-export interface RpcMetadata {
-  namespace: string;
-}
-
-////////////////
-
-// TODO: check if there is a better method to manually apply decorators
-declare let __decorate: Function;
-
-export const JSONRpcService = (metadata: RpcMetadata) => {
-  return (constructor: Function) => {
-    __decorate([Injectable(), Controller()], constructor);
-    for (let key of Object.getOwnPropertyNames(constructor.prototype))
-      if (key !== "constructor") {
-        if (typeof constructor.prototype[key] === "function") {
-          let dec = MessagePattern(metadata.namespace + "." + key);
-          __decorate([dec], constructor.prototype, key, null);
-        }
+/**
+ * Helper to serialize JSONRPC responses
+ */
+function serializeResponse<T>(
+  id: string,
+  response: { value: T } | { error: CodedRpcException }
+): JSONRPCResponse<T> {
+  if ("error" in response) {
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: {
+        code: response.error.code || 500,
+        data: response.error.data,
+        message: response.error.message
       }
-  };
-};
+    };
+  } else {
+    return { jsonrpc: "2.0", id, result: response.value };
+  }
+}
 
 export class JSONRPCServer extends Server implements CustomTransportStrategy {
   public server: http.Server | null = null;
 
+  /**
+   * Creates a new JSON RPC Server strategy. When used to create a NestJS microservice, it will
+   * expose a new microservce with a HTTP transport which implements JSON-RPC
+   */
   constructor(private readonly options: JSONRPCServerOptions) {
     super();
   }
@@ -64,7 +66,8 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
       let handler = this.getHandlerByPattern(req.body.method);
 
       if (handler == null) {
-        return res.status(404).json({ error: "Not Found" });
+        let error = new CodedRpcException("Method not found: " + req.body.method, 404);
+        return res.status(200).json(serializeResponse(req.body.id, { error }));
       }
 
       let observableResult = this.transformToObservable(await handler(req.body.params));
@@ -75,14 +78,7 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
         error => ({ error })
       );
 
-      if ("error" in response) {
-        let resp = { code: 500, message: response.error.message, data: undefined };
-        if ("code" in response.error) resp.code = response.error.code;
-        if ("data" in response.error) resp.data = response.error.data;
-        res.status(resp.code).json(resp);
-      } else {
-        res.status(200).json(response.value);
-      }
+      res.status(200).json(serializeResponse(req.body.id, response));
     });
 
     await invokeAsync(cb => {
@@ -99,11 +95,5 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
   public async close() {
     await invokeAsync(cb => this.server && this.server.close(cb));
     // do nothing, maybe block further requests
-  }
-}
-
-export class CodedRpcException extends RpcException {
-  constructor(message: string, public code: number = 500, public data: any = {}) {
-    super({ message, code, data });
   }
 }

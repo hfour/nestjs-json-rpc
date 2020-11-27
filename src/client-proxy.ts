@@ -1,7 +1,24 @@
 import { ClientProxy } from "@nestjs/microservices";
 import axios from "axios";
-import { resolve } from "dns";
-import { CodedRpcException } from ".";
+import { response } from "express";
+import { CodedRpcException } from "./coded-error";
+import { JSONRPCResponse } from "./transport-types";
+
+function deserializeResponse<T>(
+  responseData: JSONRPCResponse<T>
+): { value: T } | { error: CodedRpcException } {
+  if ("error" in responseData) {
+    return {
+      error: new CodedRpcException(
+        responseData.error.message,
+        responseData.error.code,
+        responseData.error.data
+      )
+    };
+  } else {
+    return { value: responseData.result };
+  }
+}
 
 export class JSONRPCClient extends ClientProxy {
   constructor(private readonly url: string) {
@@ -31,25 +48,21 @@ export class JSONRPCClient extends ClientProxy {
   getService<SvcInterface>(namespace: string): ServiceClient<SvcInterface> {
     let url = this.url;
     let id = ++this.counter;
-    let jsonrpc = this.jsonrpc;
     return new Proxy(
       {},
       {
-        get(obj, prop) {
-          return function(params: any) {
-            return axios
-              .post(url, {
-                method: namespace + "." + prop.toString(),
-                params,
-                jsonrpc: "2.0",
-                id
-              })
-              .then(res => res.data)
-              .catch(err => {
-                const { code, message, data } = err.response.data;
+        get(_obj, prop) {
+          return async function(params: any) {
+            let res = await axios.post(url, {
+              method: namespace + "." + prop.toString(),
+              params,
+              jsonrpc: "2.0",
+              id
+            });
 
-                throw new CodedRpcException(message, code, data);
-              });
+            let result = deserializeResponse(res.data);
+            if ("error" in result) throw result.error;
+            else return result.value;
           };
         }
       }
