@@ -2,10 +2,10 @@ import { ClientProxy } from "@nestjs/microservices";
 import axios from "axios";
 import { response } from "express";
 import { CodedRpcException } from "./coded-error";
-import { JSONRPCResponse } from "./transport-types";
+import { JsonRpcResponse } from "./transport-types";
 
 function deserializeResponse<T>(
-  responseData: JSONRPCResponse<T>
+  responseData: JsonRpcResponse<T>
 ): { value: T } | { error: CodedRpcException } {
   if ("error" in responseData) {
     return {
@@ -20,7 +20,7 @@ function deserializeResponse<T>(
   }
 }
 
-export class JSONRPCClient extends ClientProxy {
+export class JsonRpcClient extends ClientProxy {
   constructor(private readonly url: string, private readonly metadata?: { [key: string]: string }) {
     super();
   }

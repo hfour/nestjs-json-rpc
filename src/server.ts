@@ -6,10 +6,10 @@ import { Injectable, Controller } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
 
 import { invokeAsync } from "./util";
-import { JSONRPCResponse } from "./transport-types";
+import { JsonRpcResponse } from "./transport-types";
 import { CodedRpcException } from "./coded-error";
 
-export class JSONRPCContext {
+export class JsonRpcContext {
   constructor(private req: express.Request, private server: express.Application) {}
 
   getMetadataByKey(metadataKey: string): string | undefined {
@@ -17,7 +17,7 @@ export class JSONRPCContext {
   }
 }
 
-export interface JSONRPCServerOptions {
+export interface JsonRpcServerOptions {
   /**
    * Listening port for the HTTP server
    */
@@ -38,7 +38,7 @@ export interface JSONRPCServerOptions {
 function serializeResponse<T>(
   id: string,
   response: { value: T } | { error: CodedRpcException }
-): JSONRPCResponse<T> {
+): JsonRpcResponse<T> {
   if ("error" in response) {
     return {
       jsonrpc: "2.0",
@@ -54,14 +54,14 @@ function serializeResponse<T>(
   }
 }
 
-export class JSONRPCServer extends Server implements CustomTransportStrategy {
+export class JsonRpcServer extends Server implements CustomTransportStrategy {
   public server: http.Server | null = null;
 
   /**
    * Creates a new JSON RPC Server strategy. When used to create a NestJS microservice, it will
    * expose a new microservce with a HTTP transport which implements JSON-RPC
    */
-  constructor(private readonly options: JSONRPCServerOptions) {
+  constructor(private readonly options: JsonRpcServerOptions) {
     super();
   }
 
@@ -78,7 +78,7 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
         return res.status(200).json(serializeResponse(req.body.id, { error }));
       }
 
-      let context = new JSONRPCContext(req, app);
+      let context = new JsonRpcContext(req, app);
 
       let observableResult = this.transformToObservable(await handler(req.body.params, context));
       let promiseResult = observableResult.toPromise();

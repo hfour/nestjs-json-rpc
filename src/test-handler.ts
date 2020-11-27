@@ -12,7 +12,7 @@ import {
   Scope
 } from "@nestjs/common";
 
-import { CodedRpcException, JSONRPCContext, RpcMethod, RpcService } from ".";
+import { CodedRpcException, JsonRpcContext, RpcMethod, RpcService } from ".";
 
 const initialModuleState = {
   pipeCalled: false,
@@ -61,7 +61,7 @@ function getMetadataFromContext(ctx: ExecutionContext, key: string) {
     case "rpc":
       return ctx
         .switchToRpc()
-        .getContext<JSONRPCContext>()
+        .getContext<JsonRpcContext>()
         .getMetadataByKey(key);
   }
 }

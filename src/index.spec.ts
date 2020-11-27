@@ -2,13 +2,13 @@ import { Test } from "@nestjs/testing";
 import { INestMicroservice } from "@nestjs/common";
 
 import { TestService } from "./test-handler";
-import { JSONRPCServer, JSONRPCClient, CodedRpcException } from ".";
+import { JsonRpcServer, JsonRpcClient, CodedRpcException } from ".";
 
 describe("json-rpc-e2e", () => {
   let app: INestMicroservice;
-  let server: JSONRPCServer;
-  let client: JSONRPCClient;
-  let clientWithoutMetadata: JSONRPCClient;
+  let server: JsonRpcServer;
+  let client: JsonRpcClient;
+  let clientWithoutMetadata: JsonRpcClient;
   let service: TestService;
   let unauthorizedService: TestService;
 
@@ -17,16 +17,16 @@ describe("json-rpc-e2e", () => {
       controllers: [TestService]
     }).compile();
 
-    server = new JSONRPCServer({
+    server = new JsonRpcServer({
       path: "/rpc/v1",
       port: 8080
     });
 
-    client = new JSONRPCClient("http://localhost:8080/rpc/v1", {
+    client = new JsonRpcClient("http://localhost:8080/rpc/v1", {
       Authorization: "Bearer xyz"
     });
 
-    clientWithoutMetadata = new JSONRPCClient("http://localhost:8080/rpc/v1");
+    clientWithoutMetadata = new JsonRpcClient("http://localhost:8080/rpc/v1");
 
     service = client.getService<TestService>("test");
 
@@ -36,17 +36,17 @@ describe("json-rpc-e2e", () => {
     await app.listenAsync();
   });
 
-  it(`should make and RPC call with the JSONRPCClient`, async () => {
+  it(`should make and RPC call with the JsonRpcClient`, async () => {
     let res = await service.invokeClientService({ test: "hi" });
     expect(res).toStrictEqual({ test: "hi" });
   });
 
-  it(`should fail to make a request with an unauthorized JSONRPCClient`, async () => {
+  it(`should fail to make a request with an unauthorized JsonRpcClient`, async () => {
     let result = unauthorizedService.invokeClientService({ test: "hi" });
     await expect(result).rejects.toThrowError("Forbidden resource");
   });
 
-  it(`should return an error and check error data from JSONRPCClient call`, async () => {
+  it(`should return an error and check error data from JsonRpcClient call`, async () => {
     const expectedCodedException = new CodedRpcException("RPC EXCEPTION", 403, {
       fromService: "Test Service",
       params: { data: "hi" }
