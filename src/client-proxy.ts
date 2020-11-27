@@ -21,7 +21,7 @@ function deserializeResponse<T>(
 }
 
 export class JSONRPCClient extends ClientProxy {
-  constructor(private readonly url: string) {
+  constructor(private readonly url: string, private readonly metadata?: { [key: string]: string }) {
     super();
   }
   private counter: number = 0;
@@ -48,17 +48,24 @@ export class JSONRPCClient extends ClientProxy {
   getService<SvcInterface>(namespace: string): ServiceClient<SvcInterface> {
     let url = this.url;
     let id = ++this.counter;
+    let headers = this.metadata;
     return new Proxy(
       {},
       {
         get(_obj, prop) {
           return async function(params: any) {
-            let res = await axios.post(url, {
-              method: namespace + "." + prop.toString(),
-              params,
-              jsonrpc: "2.0",
-              id
-            });
+            let res = await axios.post(
+              url,
+              {
+                method: namespace + "." + prop.toString(),
+                params,
+                jsonrpc: "2.0",
+                id
+              },
+              {
+                headers
+              }
+            );
 
             let result = deserializeResponse(res.data);
             if ("error" in result) throw result.error;

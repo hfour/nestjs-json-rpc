@@ -9,6 +9,14 @@ import { invokeAsync } from "./util";
 import { JSONRPCResponse } from "./transport-types";
 import { CodedRpcException } from "./coded-error";
 
+export class JSONRPCContext {
+  constructor(private req: express.Request, private server: express.Application) {}
+
+  getMetadataByKey(metadataKey: string): string | undefined {
+    return this.req.get(metadataKey);
+  }
+}
+
 export interface JSONRPCServerOptions {
   /**
    * Listening port for the HTTP server
@@ -70,7 +78,9 @@ export class JSONRPCServer extends Server implements CustomTransportStrategy {
         return res.status(200).json(serializeResponse(req.body.id, { error }));
       }
 
-      let observableResult = this.transformToObservable(await handler(req.body.params));
+      let context = new JSONRPCContext(req, app);
+
+      let observableResult = this.transformToObservable(await handler(req.body.params, context));
       let promiseResult = observableResult.toPromise();
 
       let response = await promiseResult.then(

@@ -12,7 +12,7 @@ import {
   Scope
 } from "@nestjs/common";
 
-import { CodedRpcException, RpcMethod, RpcService } from ".";
+import { CodedRpcException, JSONRPCContext, RpcMethod, RpcService } from ".";
 
 const initialModuleState = {
   pipeCalled: false,
@@ -51,13 +51,31 @@ class TestInterceptor implements NestInterceptor {
   }
 }
 
+function getMetadataFromContext(ctx: ExecutionContext, key: string) {
+  switch (ctx.getType()) {
+    case "http":
+      return ctx
+        .switchToHttp()
+        .getRequest()
+        .get(key);
+    case "rpc":
+      return ctx
+        .switchToRpc()
+        .getContext<JSONRPCContext>()
+        .getMetadataByKey(key);
+  }
+}
+
 @Injectable()
 class TestGuard implements CanActivate {
   canActivate(
-    _context: ExecutionContext
+    ctx: ExecutionContext
   ): boolean | Promise<boolean> | import("rxjs").Observable<boolean> {
-    DecorationsState.guardCaled = true;
-    return true;
+    let authMetadata = getMetadataFromContext(ctx, "Authorization");
+    if (authMetadata) {
+      return true;
+    }
+    return false;
   }
 }
 
@@ -96,6 +114,10 @@ export class TestService implements ITestClientService {
 
   public async notExposed(params: { test: string }) {
     return params;
+  }
+
+  @RpcMethod() public async unrecognizedError(params: {}) {
+    throw new TypeError("Accidental server error");
   }
 }
 
