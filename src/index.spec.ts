@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import { INestMicroservice } from "@nestjs/common";
 
-import { TestService } from "./test-handler";
+import { ITestClientService, TestService } from "./test-handler";
 import { JsonRpcServer, JsonRpcClient, CodedRpcException } from ".";
 
 describe("json-rpc-e2e", () => {
@@ -9,8 +9,8 @@ describe("json-rpc-e2e", () => {
   let server: JsonRpcServer;
   let client: JsonRpcClient;
   let clientWithoutMetadata: JsonRpcClient;
-  let service: TestService;
-  let unauthorizedService: TestService;
+  let service: ITestClientService;
+  let unauthorizedService: ITestClientService;
 
   beforeAll(async () => {
     let moduleRef = await Test.createTestingModule({
@@ -28,9 +28,9 @@ describe("json-rpc-e2e", () => {
 
     clientWithoutMetadata = new JsonRpcClient("http://localhost:8080/rpc/v1");
 
-    service = client.getService<TestService>("test");
+    service = client.getService<ITestClientService>("test");
 
-    unauthorizedService = clientWithoutMetadata.getService<TestService>("test");
+    unauthorizedService = clientWithoutMetadata.getService<ITestClientService>("test");
 
     app = moduleRef.createNestMicroservice({ strategy: server });
     await app.listenAsync();
