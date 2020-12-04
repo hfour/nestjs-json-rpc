@@ -11,6 +11,7 @@ import {
   UseGuards,
   Scope
 } from "@nestjs/common";
+import { Ctx } from "@nestjs/microservices";
 
 import { CodedRpcException, JsonRpcContext, RpcMethod, RpcService } from ".";
 
@@ -118,6 +119,10 @@ export class TestService implements ITestClientService {
 
   @RpcMethod() public async unrecognizedError(params: {}) {
     throw new TypeError("Accidental server error");
+  }
+
+  @RpcMethod() public async injectContext(params: {}, @Ctx() context?: JsonRpcContext) {
+    return { key: context?.getMetadataByKey("Authorization") };
   }
 }
 

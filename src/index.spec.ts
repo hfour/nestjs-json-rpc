@@ -68,6 +68,12 @@ describe("json-rpc-e2e", () => {
     await expect(resp).rejects.toThrowError(expectedCodedException);
   });
 
+  it(`should inject the context`, async () => {
+    const expectedCodedException = new CodedRpcException("Internal server error");
+    const resp = await service.injectContext({});
+    expect(resp.key).toEqual("Bearer xyz");
+  });
+
   afterAll(async () => {
     await app.close();
   });
