@@ -1,11 +1,10 @@
+import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as http from "http";
 
-import { Server, CustomTransportStrategy, RpcException } from "@nestjs/microservices";
-import { Injectable, Controller } from "@nestjs/common";
-import { MessagePattern } from "@nestjs/microservices";
+import { Server, CustomTransportStrategy } from "@nestjs/microservices";
+import { HttpServer } from "@nestjs/common";
 
-import { invokeAsync } from "./util";
 import { JsonRpcResponse } from "./transport-types";
 import { CodedRpcException } from "./coded-error";
 
@@ -17,19 +16,16 @@ export class JsonRpcContext {
   }
 }
 
-export interface JsonRpcServerOptions {
+interface JsonRpcServerOptions {
   /**
-   * Listening port for the HTTP server
-   */
-  port: number;
-  /**
-   * Listening host (optional, defaults to any)
-   */
-  hostname?: string;
-  /*
    * The path at which the JSON RPC endpoint should be mounted
    */
   path: string;
+
+  /**
+   * The HTTP Server provided by the Nest runtime
+   */
+  server: HttpServer;
 }
 
 /**
@@ -66,11 +62,10 @@ export class JsonRpcServer extends Server implements CustomTransportStrategy {
   }
 
   public async listen(callback: () => void) {
-    let app = express();
+    let app = this.options.server ?? express();
+    app.use(bodyParser.json());
 
-    app.post(this.options.path, express.json(), async (req, res) => {
-      // let handlers = this.getHandlers();
-
+    app.post(this.options.path, async (req, res) => {
       let handler = this.getHandlerByPattern(req.body.method);
 
       if (handler == null) {
@@ -78,7 +73,7 @@ export class JsonRpcServer extends Server implements CustomTransportStrategy {
         return res.status(200).json(serializeResponse(req.body.id, { error }));
       }
 
-      let context = new JsonRpcContext(req, app);
+      let context = new JsonRpcContext(req, app.getHttpServer());
 
       let observableResult = this.transformToObservable(await handler(req.body.params, context));
       let promiseResult = observableResult.toPromise();
@@ -91,19 +86,10 @@ export class JsonRpcServer extends Server implements CustomTransportStrategy {
       res.status(200).json(serializeResponse(req.body.id, response));
     });
 
-    await invokeAsync(cb => {
-      if (this.options.hostname != null) {
-        this.server = app.listen(this.options.port, this.options.hostname, cb);
-      } else {
-        this.server = app.listen(this.options.port, cb);
-      }
-    });
-
     callback();
   }
 
   public async close() {
-    await invokeAsync(cb => this.server && this.server.close(cb));
     // do nothing, maybe block further requests
   }
 }

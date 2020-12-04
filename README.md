@@ -15,15 +15,19 @@ Currently uses HTTP as the transport layer, with plans to add other options as t
 
 ## Usage example
 
-Initialize similar to a regular microservice, but pass a `JsonRpcService` as the strategy option:
+Initialize similar to a regular microservice used in a hybrid application, but pass a `JsonRpcService` as the strategy option:
 
 ```typescript
-const app = await NestFactory.createMicroservice(ApplicationModule, {
+const app = NestFactory.create(ApplicationModule);
+app.connectMicroservice({
   strategy: new JsonRpcServer({
     path: "/rpc/v1",
-    port: 8080
+    server: app.getHttpAdapter()
   })
 });
+
+await app.startAllMicroservicesAsync();
+await app.listenAsync(3000);
 ```
 
 Decorate your controllers with the `@RpcService` and `@RpcMethod` decorators:
@@ -87,6 +91,44 @@ You may also pass client headers to be sent with every request, such as the auth
 let client = new JsonRpcClient("http://localhost:8080/rpc/v1", {
   Authorization: `Bearer ${token}`
 });
+```
+
+### End-to-End Testing
+You can write E2E tests with super-test, similar to the [NEST.JS Documentation](https://docs.nestjs.com/fundamentals/testing#end-to-end-testing). This will allow you to write tests without spinning up an HTTP Server (and using a real port).
+
+```typescript
+    const moduleFixture = await Test.createTestingModule({
+      imports: [ApplicationModule],
+    })
+    .overrideProvider(ISomeProvider)
+    .useClass(MockSomeProvider)
+    .compile();
+
+    app = moduleFixture.createNestApplication();
+    
+    app.connectMicroservice({ 
+      strategy: {
+        path: '/rpc/v1',
+        server: app.getHttpAdapter()
+      }
+    });
+
+    await app.startAllMicroservicesAsync();
+    await app.init();
+
+    await request(app.getHttpServer()).post('/rpc/v1').send({
+      jsonRpc: '2.0',
+      method: 'namespace.method',
+      params: { foo: 'bar' }
+    })
+    .expect(200)
+    .expect({
+      jsonrpc: '2.0',
+      result: {
+        'message': 'Hello World!'
+      }
+    });
+
 ```
 
 ## Context
