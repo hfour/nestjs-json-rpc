@@ -15,17 +15,18 @@ Currently uses HTTP as the transport layer, with plans to add other options as t
 
 ## Usage example
 
-Initialize similar to a regular microservice used in a hybrid application, but pass a `JsonRpcService` as the strategy option:
+Initialize similar to a regular microservice, but pass a `JsonRpcService` as the strategy option:
 
 ```typescript
+const app = await NestFactory.createMicroservice(ApplicationModule, {
 const app = NestFactory.create(ApplicationModule);
 app.connectMicroservice({
   strategy: new JsonRpcServer({
     path: "/rpc/v1",
+    port: 8080
     server: app.getHttpAdapter()
   })
 });
-
 await app.startAllMicroservicesAsync();
 await app.listenAsync(3000);
 ```
@@ -65,6 +66,22 @@ For the different types of decorators, see:
 - Access control checks, permission, role checks - use [NestJS Guards](https://docs.nestjs.com/guards)
 - Transforming errors into appropriate CodedRpcExceptions (see below) - use [NestJS Exception Filters](https://docs.nestjs.com/exception-filters)
 - All other aspect oriented programming bits (logging, tracing performance measurements etc): use [NestJS Interceptors](https://docs.nestjs.com/interceptors)
+
+### Hybrid Mode
+Running in Hybrid Mode allows you to use a JSON-RPC endpoint alongside an existing Nest.JS application, using the same port. This could be used to run side-by-side with a Healthcheck endpoint, for example. All the decorators remain the same, but the initialization of the microservice should be modified as follows:
+
+```typescript
+const app = NestFactory.create(ApplicationModule);
+app.connectMicroservice({
+  strategy: new JsonRpcServer({
+    path: "/rpc/v1",
+    server: app.getHttpAdapter()
+  })
+});
+
+await app.startAllMicroservicesAsync();
+await app.listenAsync(3000);
+```
 
 ### Client
 

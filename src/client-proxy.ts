@@ -1,6 +1,5 @@
 import { ClientProxy } from "@nestjs/microservices";
 import axios from "axios";
-import { response } from "express";
 import { CodedRpcException } from "./coded-error";
 import { JsonRpcResponse } from "./transport-types";
 
