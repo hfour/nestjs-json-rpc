@@ -1,13 +1,13 @@
 import * as express from "express";
 import * as http from "http";
 
-import { Server, CustomTransportStrategy, RpcException } from "@nestjs/microservices";
-import { Injectable, Controller } from "@nestjs/common";
-import { MessagePattern } from "@nestjs/microservices";
+import { Server, CustomTransportStrategy } from "@nestjs/microservices";
+import { ExpressAdapter } from '@nestjs/platform-express';
 
-import { invokeAsync } from "./util";
 import { JsonRpcResponse } from "./transport-types";
 import { CodedRpcException } from "./coded-error";
+import { HttpServer } from "@nestjs/common";
+import { invokeAsync } from "./util";
 
 export class JsonRpcContext {
   constructor(private req: express.Request, private server: express.Application) {}
@@ -17,11 +17,24 @@ export class JsonRpcContext {
   }
 }
 
-export interface JsonRpcServerOptions {
+interface HybridJsonRpcServerOptions {
   /**
-   * Listening port for the HTTP server
+   * The path at which the JSON RPC endpoint should be mounted
    */
+  path: string;
+
+  /**
+   * The HTTP Server provided by the Nest runtime
+   */
+  adapter: HttpServer<any, any>;
+}
+
+interface StandaloneJsonRpcServerOptions {
+ /**
+  * Listening port for the HTTP server
+  */
   port: number;
+ 
   /**
    * Listening host (optional, defaults to any)
    */
@@ -31,6 +44,8 @@ export interface JsonRpcServerOptions {
    */
   path: string;
 }
+
+export type JsonRpcServerOptions = HybridJsonRpcServerOptions | StandaloneJsonRpcServerOptions;
 
 /**
  * Helper to serialize JSONRPC responses
@@ -66,11 +81,16 @@ export class JsonRpcServer extends Server implements CustomTransportStrategy {
   }
 
   public async listen(callback: () => void) {
-    let app = express();
+    let app: HttpServer<any, any>;
 
-    app.post(this.options.path, express.json(), async (req, res) => {
-      // let handlers = this.getHandlers();
+    if (this.isHybrid(this.options)) {
+      app = this.options.adapter;
+    } else {
+      app = new ExpressAdapter(express());
+      app.initHttpServer({});
+    }
 
+    app.getInstance().post(this.options.path, express.json(), async (req: express.Request, res: express.Response) => {
       let handler = this.getHandlerByPattern(req.body.method);
 
       if (handler == null) {
@@ -78,7 +98,7 @@ export class JsonRpcServer extends Server implements CustomTransportStrategy {
         return res.status(200).json(serializeResponse(req.body.id, { error }));
       }
 
-      let context = new JsonRpcContext(req, app);
+      let context = new JsonRpcContext(req, app.getHttpServer());
 
       let observableResult = this.transformToObservable(await handler(req.body.params, context));
       let promiseResult = observableResult.toPromise();
@@ -92,18 +112,32 @@ export class JsonRpcServer extends Server implements CustomTransportStrategy {
     });
 
     await invokeAsync(cb => {
-      if (this.options.hostname != null) {
-        this.server = app.listen(this.options.port, this.options.hostname, cb);
+      if (this.isStandalone(this.options)) {
+        if (this.options.hostname != null) {
+          this.server = app.listen(this.options.port, this.options.hostname, cb);
+        } else {
+          this.server = app.listen(this.options.port, cb);
+        }
       } else {
-        this.server = app.listen(this.options.port, cb);
+        cb();
       }
     });
-
+    
     callback();
   }
 
   public async close() {
-    await invokeAsync(cb => this.server && this.server.close(cb));
     // do nothing, maybe block further requests
+    if (this.isStandalone(this.options)) {
+      await invokeAsync(cb => this.server && this.server.close(cb));
+    }
+  }
+
+  private isHybrid(options: JsonRpcServerOptions): options is HybridJsonRpcServerOptions {
+    return (options as HybridJsonRpcServerOptions).adapter !== undefined;
+  }
+
+  private isStandalone(options: JsonRpcServerOptions): options is StandaloneJsonRpcServerOptions {
+    return (options as StandaloneJsonRpcServerOptions).port !== undefined;
   }
 }

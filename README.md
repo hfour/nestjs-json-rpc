@@ -19,11 +19,16 @@ Initialize similar to a regular microservice, but pass a `JsonRpcService` as the
 
 ```typescript
 const app = await NestFactory.createMicroservice(ApplicationModule, {
+const app = NestFactory.create(ApplicationModule);
+app.connectMicroservice({
   strategy: new JsonRpcServer({
     path: "/rpc/v1",
     port: 8080
+    server: app.getHttpAdapter()
   })
 });
+await app.startAllMicroservicesAsync();
+await app.listenAsync(3000);
 ```
 
 Decorate your controllers with the `@RpcService` and `@RpcMethod` decorators:
@@ -62,6 +67,22 @@ For the different types of decorators, see:
 - Transforming errors into appropriate CodedRpcExceptions (see below) - use [NestJS Exception Filters](https://docs.nestjs.com/exception-filters)
 - All other aspect oriented programming bits (logging, tracing performance measurements etc): use [NestJS Interceptors](https://docs.nestjs.com/interceptors)
 
+### Hybrid Mode
+Running in Hybrid Mode allows you to use a JSON-RPC endpoint alongside an existing Nest.JS application, using the same port. This could be used to run side-by-side with a Healthcheck endpoint, for example. All the decorators remain the same, but the initialization of the microservice should be modified as follows:
+
+```typescript
+const app = NestFactory.create(ApplicationModule);
+app.connectMicroservice({
+  strategy: new JsonRpcServer({
+    path: "/rpc/v1",
+    server: app.getHttpAdapter()
+  })
+});
+
+await app.startAllMicroservicesAsync();
+await app.listenAsync(3000);
+```
+
 ### Client
 
 `nestjs-json-rpc` also comes with a way to create clients!
@@ -87,6 +108,44 @@ You may also pass client headers to be sent with every request, such as the auth
 let client = new JsonRpcClient("http://localhost:8080/rpc/v1", {
   Authorization: `Bearer ${token}`
 });
+```
+
+### End-to-End Testing
+You can write E2E tests with super-test, similar to the [NEST.JS Documentation](https://docs.nestjs.com/fundamentals/testing#end-to-end-testing). This will allow you to write tests without spinning up an HTTP Server (and using a real port).
+
+```typescript
+    const moduleFixture = await Test.createTestingModule({
+      imports: [ApplicationModule],
+    })
+    .overrideProvider(ISomeProvider)
+    .useClass(MockSomeProvider)
+    .compile();
+
+    app = moduleFixture.createNestApplication();
+    
+    app.connectMicroservice({ 
+      strategy: {
+        path: '/rpc/v1',
+        server: app.getHttpAdapter()
+      }
+    });
+
+    await app.startAllMicroservicesAsync();
+    await app.init();
+
+    await request(app.getHttpServer()).post('/rpc/v1').send({
+      jsonRpc: '2.0',
+      method: 'namespace.method',
+      params: { foo: 'bar' }
+    })
+    .expect(200)
+    .expect({
+      jsonrpc: '2.0',
+      result: {
+        'message': 'Hello World!'
+      }
+    });
+
 ```
 
 ## Context
