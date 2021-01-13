@@ -1,6 +1,6 @@
 {
   "name": "@hfour/nestjs-json-rpc",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "JSON-RPC module for NestJS framework",
   "author": "hfour",
   "main": "dist/index.js",
