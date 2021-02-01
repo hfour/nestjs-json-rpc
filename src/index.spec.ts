@@ -45,6 +45,10 @@ describe("json-rpc-e2e", () => {
       expect(res).toStrictEqual({ test: "hi" });
     });
 
+    it(`should throw if sends an invalid DTO`, async () => {
+      let res = service.invokeClientService({ test: "" });
+      await expect(res).rejects.toThrow("hi");
+    });
     it(`should fail to make a request with an unauthorized JsonRpcClient`, async () => {
       let result = unauthorizedService.invokeClientService({ test: "hi" });
       await expect(result).rejects.toThrowError("Forbidden resource");

@@ -10,9 +10,11 @@ import {
   UseInterceptors,
   UseGuards,
   Scope,
-  Inject
+  ValidationPipe
 } from "@nestjs/common";
 import { Ctx } from "@nestjs/microservices";
+
+import { IsNotEmpty } from "class-validator";
 
 import { CodedRpcException, JsonRpcContext, RpcController, RpcMethod, RpcService } from ".";
 
@@ -83,6 +85,11 @@ class TestGuard implements CanActivate {
 
 type IRpcTestService = RpcController<ITestClientService>;
 
+export class TestDto {
+  @IsNotEmpty()
+  test!: string;
+}
+
 @RpcService({
   namespace: "test"
 })
@@ -96,24 +103,17 @@ export class TestService implements IRpcTestService {
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
   @RpcMethod()
-  public async invoke(params: { test: string }) {
-    return Promise.resolve(params);
-  }
-
-  @UsePipes(TestPipe)
-  @UseInterceptors(TestInterceptor)
-  @UseGuards(TestGuard)
-  @RpcMethod()
   public async testError(params: { errorTest: string }) {
     // construct the error object with some data inside
     throw new CodedRpcException("RPC EXCEPTION", 403, { fromService: "Test Service", params });
   }
 
   @UsePipes(TestPipe)
+  @UsePipes(ValidationPipe)
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
   @RpcMethod()
-  public async invokeClientService(params: { test: string }) {
+  public async invokeClientService(params: TestDto) {
     return Promise.resolve(params);
   }
 
@@ -131,7 +131,6 @@ export class TestService implements IRpcTestService {
 }
 
 export interface ITestClientService {
-  invoke(params: { test: string }): Promise<{ test: string }>;
   invokeClientService(params: { test: string }): Promise<{ test: string }>;
   testError(params: { errorTest: string }): Promise<void>;
   injectContext(params: {}): Promise<{ key: string | undefined }>;
