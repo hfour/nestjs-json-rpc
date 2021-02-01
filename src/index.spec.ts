@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import * as request from "supertest";
 
 import { Test } from "@nestjs/testing";
 import { INestApplication, INestMicroservice } from "@nestjs/common";
@@ -15,7 +15,7 @@ describe("json-rpc-e2e", () => {
   let service: ITestClientService;
   let unauthorizedService: ITestClientService;
 
-  describe('standalone', () => {
+  describe("standalone", () => {
     beforeAll(async () => {
       let moduleRef = await Test.createTestingModule({
         controllers: [TestService]
@@ -61,7 +61,10 @@ describe("json-rpc-e2e", () => {
     });
 
     it(`should fail to invoke unexposed methods`, async () => {
-      const expectedCodedException = new CodedRpcException("Method not found: test.notExposed", 404);
+      const expectedCodedException = new CodedRpcException(
+        "Method not found: test.notExposed",
+        404
+      );
       const resp = service.notExposed({ test: "data" });
       await expect(resp).rejects.toThrowError(expectedCodedException);
     });
@@ -83,17 +86,17 @@ describe("json-rpc-e2e", () => {
     });
   });
 
-  describe('hybrid', () => {
+  describe("hybrid", () => {
     beforeAll(async () => {
       let moduleRef = await Test.createTestingModule({
         controllers: [TestService]
       }).compile();
-    
+
       app = moduleRef.createNestApplication();
 
       server = new JsonRpcServer({
-        path: '/rpc',
-        adapter: app.getHttpAdapter(),
+        path: "/rpc",
+        adapter: app.getHttpAdapter()
       });
 
       app.connectMicroservice({ strategy: server });
@@ -102,46 +105,46 @@ describe("json-rpc-e2e", () => {
       await app.init();
     });
 
-    it('should invoke RPC methods on incoming HTTP requests', async () => {
+    it("should invoke RPC methods on incoming HTTP requests", async () => {
       await request(app.getHttpServer())
-        .post('/rpc')
-        .set('Authorization', 'Bearer xyz')
+        .post("/rpc")
+        .set("Authorization", "Bearer xyz")
         .send({
-          jsonrpc: '2.0',
-          method: 'test.invokeClientService',
-          id: '1',
+          jsonrpc: "2.0",
+          method: "test.invokeClientService",
+          id: "1",
           params: {
-            test: 'hi',
-          },
+            test: "hi"
+          }
         })
         .expect({
-          jsonrpc: '2.0',
-          id: '1',
-          result: { test: 'hi' }
+          jsonrpc: "2.0",
+          id: "1",
+          result: { test: "hi" }
         });
     });
 
-    it('should wrap json-rpc errors in http 200', async () => {
+    it("should wrap json-rpc errors in http 200", async () => {
       await request(app.getHttpServer())
-      .post('/rpc')
-      .set('Authorization', 'Bearer xyz')
-      .send({
-        jsonrpc: '2.0',
-        method: 'test.notExposed',
-        id: '1',
-        params: {
-          test: 'hi',
-        },
-      })
-      .expect({
-        jsonrpc: '2.0',
-        id: '1',
-        error: { 
-          code: 404, 
-          data: {}, 
-          message: 'Method not found: test.notExposed',
-        }
-      });
+        .post("/rpc")
+        .set("Authorization", "Bearer xyz")
+        .send({
+          jsonrpc: "2.0",
+          method: "test.notExposed",
+          id: "1",
+          params: {
+            test: "hi"
+          }
+        })
+        .expect({
+          jsonrpc: "2.0",
+          id: "1",
+          error: {
+            code: 404,
+            data: {},
+            message: "Method not found: test.notExposed"
+          }
+        });
     });
   });
 });
