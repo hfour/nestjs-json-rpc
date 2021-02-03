@@ -41,12 +41,19 @@ describe("json-rpc-e2e", () => {
     });
 
     it(`should make an RPC call with the JsonRpcClient`, async () => {
-      let res = await service.invokeClientService({ test: "hi" });
-      expect(res).toStrictEqual({ test: "hi" });
+      let result = await service.invokeClientService({ test: "hi" });
+      expect(result).toStrictEqual({ test: "hi" });
     });
 
     it(`should fail to make a request with an unauthorized JsonRpcClient`, async () => {
       let result = unauthorizedService.invokeClientService({ test: "hi" });
+      await expect(result).rejects.toThrowError("Forbidden resource");
+    });
+
+    it(`should fail to make a request with unauthorized params`, async () => {
+      let result = service.invokeClientService({
+        test: "notauthorizedByTestGuard"
+      });
       await expect(result).rejects.toThrowError("Forbidden resource");
     });
 

@@ -68,13 +68,27 @@ function getMetadataFromContext(ctx: ExecutionContext, key: string) {
   }
 }
 
+function getParamsFromContext(ctx: ExecutionContext) {
+  switch (ctx.getType()) {
+    case "http":
+      return ctx.switchToHttp().getRequest().body.params;
+    case "rpc":
+      return ctx
+        .switchToRpc()
+        .getContext<JsonRpcContext>()
+        .getParams();
+  }
+}
+
 @Injectable()
 class TestGuard implements CanActivate {
   canActivate(
     ctx: ExecutionContext
   ): boolean | Promise<boolean> | import("rxjs").Observable<boolean> {
     let authMetadata = getMetadataFromContext(ctx, "Authorization");
-    if (authMetadata) {
+    let authParams = getParamsFromContext(ctx);
+
+    if (authMetadata && authParams && authParams.test !== "notauthorizedByTestGuard") {
       return true;
     }
     return false;
