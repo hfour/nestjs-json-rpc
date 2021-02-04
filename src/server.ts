@@ -15,6 +15,10 @@ export class JsonRpcContext {
   getMetadataByKey(metadataKey: string): string | undefined {
     return this.req.get(metadataKey);
   }
+
+  getParams(): unknown {
+    return this.req.body.params;
+  }
 }
 
 interface HybridJsonRpcServerOptions {
