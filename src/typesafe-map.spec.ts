@@ -10,7 +10,7 @@ describe("typesafe-map", () => {
     m.set(MyKey1, { test: "value" });
     m.set(MyKey2, { second: "value2" });
 
-    expect(m.get(MyKey1).test).toEqual("value");
-    expect(m.get(MyKey2).second).toEqual("value2");
+    expect(m.get(MyKey1)?.test).toEqual("value");
+    expect(m.get(MyKey2)?.second).toEqual("value2");
   });
 });

@@ -45,6 +45,34 @@ export class JsonRpcContext {
 
   constructor(private req: express.Request, private server: express.Application) {}
 
+  /**
+   * Allows you to access and set custom data into individual remote procedure call contexts
+   * in a type-safe way.
+   *
+   * To use this property, you need to instantiate a TypesafeKey.
+   *
+   * The following example decodes and adds user info to the context. JWT is extracted from
+   * the RPC request metadata (the Authorization header for our HTTP transport)
+   *
+   * ```
+   * import { TypesafeKey } from '@hfour/nestjs-json-rpc'
+   * import { UserInfo } from './my-code';
+   *
+   * const UserInfoKey = new TypesafeKey<UserInfo>('myapp:auth:UserInfo');
+   *
+   * export class TestAuthenticateGuard implements CanActivate {
+   *   public async canActivate(context: ExecutionContext): Promise<boolean> {
+   *     const ctx = context.switchToRpc().getContext<JsonRpcContext>();
+   *     let jwtMetadata = ctx.getMetadataByKey('Authorization');
+   *     if (!jwtMetadata) return false;
+   *     const decoded: Result<UserInfo> = jwt.decodeBearer(jwtMetadata);
+   *     if (decoded.error) return false;
+   *     ctx.customData.set(UserInfo, decoded.result)
+   *     return true;
+   *   }
+   * }
+   * ```
+   */
   get customData() {
     return this._customData;
   }

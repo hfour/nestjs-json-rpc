@@ -88,6 +88,11 @@ describe("json-rpc-e2e", () => {
       expect(resp.key).toEqual("Bearer xyz");
     });
 
+    it("should return custom data stored in the context", async () => {
+      const resp = await service.getUserInfo({});
+      expect(resp?.name?.length).toBeGreaterThan(0);
+    });
+
     afterAll(async () => {
       await microservice.close();
     });
