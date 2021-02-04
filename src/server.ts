@@ -10,36 +10,6 @@ import { HttpServer } from "@nestjs/common";
 import { invokeAsync } from "./util";
 import { TypesafeMap } from "./typesafe-map";
 
-interface HybridJsonRpcServerOptions {
-  /**
-   * The path at which the JSON RPC endpoint should be mounted
-   */
-  path: string;
-
-  /**
-   * The HTTP Server provided by the Nest runtime
-   */
-  adapter: HttpServer<any, any>;
-}
-
-interface StandaloneJsonRpcServerOptions {
-  /**
-   * Listening port for the HTTP server
-   */
-  port: number;
-
-  /**
-   * Listening host (optional, defaults to any)
-   */
-  hostname?: string;
-  /*
-   * The path at which the JSON RPC endpoint should be mounted
-   */
-  path: string;
-}
-
-export type JsonRpcServerOptions = HybridJsonRpcServerOptions | StandaloneJsonRpcServerOptions;
-
 export class JsonRpcContext {
   private _customData = new TypesafeMap();
 
@@ -85,6 +55,36 @@ export class JsonRpcContext {
     return this.req.body.params;
   }
 }
+
+interface HybridJsonRpcServerOptions {
+  /**
+   * The path at which the JSON RPC endpoint should be mounted
+   */
+  path: string;
+
+  /**
+   * The HTTP Server provided by the Nest runtime
+   */
+  adapter: HttpServer<any, any>;
+}
+
+interface StandaloneJsonRpcServerOptions {
+  /**
+   * Listening port for the HTTP server
+   */
+  port: number;
+
+  /**
+   * Listening host (optional, defaults to any)
+   */
+  hostname?: string;
+  /*
+   * The path at which the JSON RPC endpoint should be mounted
+   */
+  path: string;
+}
+
+export type JsonRpcServerOptions = HybridJsonRpcServerOptions | StandaloneJsonRpcServerOptions;
 
 /**
  * Helper to serialize JSONRPC responses
