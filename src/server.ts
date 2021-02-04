@@ -8,18 +8,7 @@ import { JsonRpcResponse } from "./transport-types";
 import { CodedRpcException } from "./coded-error";
 import { HttpServer } from "@nestjs/common";
 import { invokeAsync } from "./util";
-
-export class JsonRpcContext {
-  constructor(private req: express.Request, private server: express.Application) {}
-
-  getMetadataByKey(metadataKey: string): string | undefined {
-    return this.req.get(metadataKey);
-  }
-
-  getParams(): unknown {
-    return this.req.body.params;
-  }
-}
+import { TypesafeMap } from "./typesafe-map";
 
 interface HybridJsonRpcServerOptions {
   /**
@@ -50,6 +39,24 @@ interface StandaloneJsonRpcServerOptions {
 }
 
 export type JsonRpcServerOptions = HybridJsonRpcServerOptions | StandaloneJsonRpcServerOptions;
+
+export class JsonRpcContext {
+  private _customData = new TypesafeMap();
+
+  constructor(private req: express.Request, private server: express.Application) {}
+
+  get customData() {
+    return this._customData;
+  }
+
+  getMetadataByKey(metadataKey: string): string | undefined {
+    return this.req.get(metadataKey);
+  }
+
+  getParams(): unknown {
+    return this.req.body.params;
+  }
+}
 
 /**
  * Helper to serialize JSONRPC responses
