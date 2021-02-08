@@ -15,6 +15,7 @@ import {
 import { Ctx } from "@nestjs/microservices";
 
 import { CodedRpcException, JsonRpcContext, RpcController, RpcMethod, RpcService } from ".";
+import { TypesafeKey } from "./typesafe-map";
 
 const initialModuleState = {
   pipeCalled: false,
@@ -80,6 +81,8 @@ function getParamsFromContext(ctx: ExecutionContext) {
   }
 }
 
+const UserInfo = new TypesafeKey<{ name: string }>("app:user:info");
+
 @Injectable()
 class TestGuard implements CanActivate {
   canActivate(
@@ -89,6 +92,8 @@ class TestGuard implements CanActivate {
     let authParams = getParamsFromContext(ctx);
 
     if (authMetadata && authParams && authParams.test !== "notauthorizedByTestGuard") {
+      let rpcCtx = ctx.switchToRpc().getContext<JsonRpcContext>();
+      rpcCtx.customData.set(UserInfo, { name: "Test" });
       return true;
     }
     return false;
@@ -110,14 +115,6 @@ export class TestService implements IRpcTestService {
   @UseInterceptors(TestInterceptor)
   @UseGuards(TestGuard)
   @RpcMethod()
-  public async invoke(params: { test: string }) {
-    return Promise.resolve(params);
-  }
-
-  @UsePipes(TestPipe)
-  @UseInterceptors(TestInterceptor)
-  @UseGuards(TestGuard)
-  @RpcMethod()
   public async testError(params: { errorTest: string }) {
     // construct the error object with some data inside
     throw new CodedRpcException("RPC EXCEPTION", 403, { fromService: "Test Service", params });
@@ -129,6 +126,14 @@ export class TestService implements IRpcTestService {
   @RpcMethod()
   public async invokeClientService(params: { test: string }) {
     return Promise.resolve(params);
+  }
+
+  @UsePipes(TestPipe)
+  @UseInterceptors(TestInterceptor)
+  @UseGuards(TestGuard)
+  @RpcMethod()
+  public async getUserInfo(params: {}, @Ctx() ctx: JsonRpcContext) {
+    return Promise.resolve(ctx.customData.get(UserInfo));
   }
 
   public async notExposed(params: { test: string }) {
@@ -145,8 +150,8 @@ export class TestService implements IRpcTestService {
 }
 
 export interface ITestClientService {
-  invoke(params: { test: string }): Promise<{ test: string }>;
   invokeClientService(params: { test: string }): Promise<{ test: string }>;
+  getUserInfo(params: {}): Promise<{ name: string } | undefined>;
   testError(params: { errorTest: string }): Promise<void>;
   injectContext(params: {}): Promise<{ key: string | undefined }>;
   unrecognizedError(params: {}): any;
