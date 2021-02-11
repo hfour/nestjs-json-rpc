@@ -83,4 +83,3 @@ export type ServiceClient<Service> = {
     ? (params: Params) => ReturnType extends Promise<any> ? ReturnType : Promise<ReturnType>
     : never;
 };
-
