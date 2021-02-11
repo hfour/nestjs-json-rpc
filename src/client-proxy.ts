@@ -76,9 +76,21 @@ export class JsonRpcClient extends ClientProxy {
   }
 }
 export type ServiceClient<Service> = {
-  [MethodName in keyof Service]: Service[MethodName] extends (params: any) => Promise<any>
-    ? Service[MethodName]
-    : Service[MethodName] extends (params: infer Params) => infer ReturnType
-    ? (params: Params) => Promise<ReturnType>
+  [MethodName in keyof Service]: Service[MethodName] extends (
+    params: infer Params,
+    ...injections: any
+  ) => infer ReturnType
+    ? (params: Params) => ReturnType extends Promise<any> ? ReturnType : Promise<ReturnType>
+    : never;
+};
+
+export type ServiceImplementation<Service> = {
+  [MethodName in keyof Service]: Service[MethodName] extends (
+    params: infer Params
+  ) => infer ReturnType
+    ? (
+        params: Params,
+        ...injections: any
+      ) => ReturnType extends Promise<any> ? ReturnType : Promise<ReturnType>
     : never;
 };
