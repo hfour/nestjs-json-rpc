@@ -5,3 +5,9 @@ export type RpcController<T> = {
     ? (params: U, ctx: JsonRpcContext) => Ret
     : never;
 };
+
+export type ControllerImplementation<T> = {
+  [K in keyof T]: T[K] extends (params: infer U) => infer Ret
+    ? (params: U, ...injections: any) => Ret
+    : never;
+};

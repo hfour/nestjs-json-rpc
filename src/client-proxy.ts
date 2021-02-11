@@ -84,13 +84,3 @@ export type ServiceClient<Service> = {
     : never;
 };
 
-export type ServiceImplementation<Service> = {
-  [MethodName in keyof Service]: Service[MethodName] extends (
-    params: infer Params
-  ) => infer ReturnType
-    ? (
-        params: Params,
-        ...injections: any
-      ) => ReturnType extends Promise<any> ? ReturnType : Promise<ReturnType>
-    : never;
-};
