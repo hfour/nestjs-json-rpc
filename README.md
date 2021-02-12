@@ -216,7 +216,7 @@ Then you can read it by injecting the context in the RPC method:
   @RpcMethod()
   public async getUserInfo(params: {}, @Ctx() ctx: JsonRpcContext) {
     const userData = ctx.customData.get(UserInfo);
-    return Promise.resolve(data?.name);
+    return Promise.resolve(userData?.name);
   }
 ```
 
