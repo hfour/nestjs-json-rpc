@@ -37,7 +37,7 @@ Decorate your controllers with the `@RpcService` and `@RpcMethod` decorators:
 @RpcService({
   namespace: "test"
 })
-export class TestService implements ITestService {
+export class TestController implements ControllerImplementation<ITestService> {
   @RpcMethod()
   public async myMethod(params: any) {
     console.log("The method called was test.myMethod");
